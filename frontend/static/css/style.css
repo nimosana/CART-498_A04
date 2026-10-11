@@ -1,0 +1,12 @@
+body {
+    background-image: linear-gradient(rgba(171, 173, 177, 0.78), rgba(14, 15, 18, 0.88));
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px 80px;
+    -webkit-font-smoothing: antialiased;
+}

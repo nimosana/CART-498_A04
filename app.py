@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="frontend/templates", static_folder="frontend/static")
 openai.api_key = os.getenv("OPENAI_API_KEY")  # Securely load API key
 
 @app.route("/", methods=["GET", "POST"])
