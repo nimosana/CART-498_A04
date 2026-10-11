@@ -1,0 +1,16 @@
+cd C:\Users\nimosana\Documents\GitHub\CART-498_A04
+
+# Enable Python scripts
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+
+# Create virtual environment
+python -m venv venv
+
+# Activate your virtual environment
+.\venv\Scripts\Activate.ps1
+
+# Install the required packages
+pip install flask openai python-dotenv gunicorn
+
+# Run the app
+python app.py
