@@ -4,27 +4,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ask me anything</title>
+    <title>Generated gallery</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
     <div class="container text-center mt-5">
-        <h1 class="display-4">Ask me anything</h1>
+        <div class="gallery-header">
+            <h1 class="display-4">Generated Gallery</h1>
+            <p class="subtitle">Enter the description of an everyday object to generate its canonical museum wall label.
+            </p>
+        </div>
+
         <form method="POST" class="mx-auto col-md-8 col-lg-6">
             <div class="mb-3">
-                <textarea name="prompt" rows="4" class="form-control" placeholder="Enter your prompt..."></textarea>
+                <textarea name="prompt" rows="4" class="form-control" placeholder="Describe an object..."
+                    required></textarea>
             </div>
             <div class="d-grid">
-                <input type="submit" value="Submit" class="btn btn-primary">
+                <input type="submit" value="Curate Museum Label" class="btn btn-primary">
             </div>
         </form>
 
-        {% if result %}
-        <h3 class="mt-4">Response:</h3>
-        <div class="alert alert-secondary">{{ result }}</div>
+        {% if label %}
+        <div class="placard-section mt-4">
+            <h3 class="placard-heading">Museum Wall Label</h3>
+            <div class="museum-placard" id="museumPlacard">
+                <div class="placard-card-inner">
+                    <!-- 1. First Group: Main Museum Label Elements -->
+                    <div class="placard-primary-group">
+                        {% if label.artist %}
+                        <div class="placard-element placard-element-artist">
+                            <h4 class="element-header">Artist</h4>
+                            <div class="element-value">{{ label.artist }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if label.title %}
+                        <div class="placard-element placard-element-title">
+                            <h4 class="element-header">Title</h4>
+                            <div class="element-value element-value-title">{{ label.title }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if label.medium %}
+                        <div class="placard-element placard-element-medium">
+                            <h4 class="element-header">Medium</h4>
+                            <div class="element-value">{{ label.medium }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if label.dimensions %}
+                        <div class="placard-element placard-element-dimensions">
+                            <h4 class="element-header">Dimensions</h4>
+                            <div class="element-value">{{ label.dimensions }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if label.provenance %}
+                        <div class="placard-element placard-element-provenance">
+                            <h4 class="element-header">Provenance</h4>
+                            <div class="element-value">{{ label.provenance }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 2. Credit line in smaller font below first group -->
+                    {% if label.credit %}
+                    <div class="placard-credit-line">
+                        <span class="credit-header">Credit line:</span>
+                        <span class="credit-value">{{ label.credit }}</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- 3. Curatorial statement in second block below first group -->
+                    {% if label.curatorial %}
+                    <div class="placard-curatorial-block">
+                        <h4 class="curatorial-header">Curatorial Statement</h4>
+                        <div class="curatorial-body">
+                            <p>{{ label.curatorial }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% elif result %}
+        <div class="placard-section mt-4">
+            <h3 class="placard-heading">Museum Wall Label</h3>
+            <div class="museum-placard alert alert-secondary" id="museumPlacard">{{ result }}</div>
+        </div>
         {% endif %}
     </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 
 </html>
