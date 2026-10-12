@@ -1,13 +1,15 @@
 from flask import Flask, render_template, request
-import openai
+from openai import OpenAI
 import os
 import re
+import base64
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env
 
 app = Flask(__name__, template_folder="frontend/templates", static_folder="frontend/static")
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Securely load API key
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def parse_museum_label(text):
     if not text or not isinstance(text, str):
@@ -55,46 +57,87 @@ def parse_museum_label(text):
 
     return data if data else None
 
+def generate_text_label(prompt):
+    try:
+        response = client.responses.create(
+            model="gpt-4.1",  
+            input=[
+                {
+                    "role": "developer", 
+                    "content": (
+                        "You are the senior chief curator at an ultra-prestigious, internationally renowned contemporary art museum. "
+                        "Your job is to transform the user's everyday object into an elevated, canonical work of contemporary art and compose its official museum wall label (cartel).\n\n"
+                        "Style & Vocabulary Guidelines:\n"
+                        "- Heavily use International Art English (IAE) vocabulary and conceptual theory terms (e.g., discursive, interrogate, praxis, liminality, reification, assemblage, spatiality, ontological, performative, apparatus, tension, juxtaposition, destabilize, hermeneutics, subversion, relationality).\n"
+                        "- Radically exaggerate and elevate the gallery importance and institutional reverence of the object, treating even the most mundane detail as a profound metaphysical event.\n\n"
+                        "Format Requirement:\n"
+                        "The museum label must ALWAYS include the following sections:\n"
+                        "Artist: [An invented artist name], [An invented bio line, e.g., 'b. 1997, lives and works between Verdun and the cloud']\n"
+                        "Title: [An invented high-concept artwork title], [Year]\n"
+                        "Medium: [A medium line mixing real physical materials and evocative abstractions, e.g., 'Polyester, elastic, fatigue']\n"
+                        "Dimensions: [Invented dimensions, e.g., 'Variable dimensions' or '34.5 × 12.0 × 8.2 cm']\n"
+                        "Provenance: [The object's ownership history, e.g., 'Found under a radiator, 2026; private collection of a dépanneur; acquired by the museum after a tense negotiation']\n"
+                        "Credit line: [Invented institutional credit line, e.g., 'Gift of the artist’s backpack']\n\n"
+                        "Curatorial statement:\n"
+                        "[Curatorial statement of strictly 80–120 words analyzing the work. It MUST cite one invented theorist and their invented book title (e.g., as theorist Sylvère Vandermeer posits in 'The Ruptured Everyday' (2019)...). Use dense International Art English to frame the object as an urgent intervention into institutional space.]"
+                    )
+                }, 
+                {"role": "user", "content": prompt}
+            ],
+            temperature=1.2,
+            max_output_tokens=700
+        )
+        result = response.output_text
+        label = parse_museum_label(result)
+        return result, label
+    except Exception as e:
+        return f"Error: {str(e)}", None
+
+def generate_artwork_image(prompt):
+    try:
+        image_prompt = (
+            f"Generate an image of {prompt} exhibited as a contemporary conceptual artwork in a prestigious museum gallery setting. "
+            f"The object is dramatically spotlit on a clean exhibition pedestal or mounted in a white-cube gallery space with polished floors."
+        )
+        response = client.responses.create(
+            model="gpt-6-astra",
+            input=image_prompt,
+            tools=[{"type": "image_generation"}],
+        )
+        image_data = [
+            output.result
+            for output in response.output
+            if getattr(output, "type", None) == "image_generation_call"
+        ]
+        if image_data:
+            image_base64 = image_data[0]
+            # Save the image to a file as shown in the example
+            try:
+                with open("latest_artwork.png", "wb") as f:
+                    f.write(base64.b64decode(image_base64))
+            except Exception:
+                pass
+            return image_base64
+        return None
+    except Exception as e:
+        print(f"Image generation error: {e}")
+        return None
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
     label = None
+    image_base64 = None
     if request.method == "POST":
         prompt = request.form["prompt"]
-        try:
-            response = openai.responses.create(
-                model="gpt-4.1",  
-                input=[
-                    {
-                        "role": "developer", 
-                        "content": (
-                            "You are the senior chief curator at an ultra-prestigious, internationally renowned contemporary art museum. "
-                            "Your job is to transform the user's everyday object into an elevated, canonical work of contemporary art and compose its official museum wall label (cartel).\n\n"
-                            "Style & Vocabulary Guidelines:\n"
-                            "- Heavily use International Art English (IAE) vocabulary and conceptual theory terms (e.g., discursive, interrogate, praxis, liminality, reification, assemblage, spatiality, ontological, performative, apparatus, tension, juxtaposition, destabilize, hermeneutics, subversion, relationality).\n"
-                            "- Radically exaggerate and elevate the gallery importance and institutional reverence of the object, treating even the most mundane detail as a profound metaphysical event.\n\n"
-                            "Format Requirement:\n"
-                            "The museum label must ALWAYS include the following sections:\n"
-                            "Artist: [An invented artist name], [An invented bio line, e.g., 'b. 1997, lives and works between Verdun and the cloud']\n"
-                            "Title: [An invented high-concept artwork title], [Year]\n"
-                            "Medium: [A medium line mixing real physical materials and evocative abstractions, e.g., 'Polyester, elastic, fatigue']\n"
-                            "Dimensions: [Invented dimensions, e.g., 'Variable dimensions' or '34.5 × 12.0 × 8.2 cm']\n"
-                            "Provenance: [The object's ownership history, e.g., 'Found under a radiator, 2026; private collection of a dépanneur; acquired by the museum after a tense negotiation']\n"
-                            "Credit line: [Invented institutional credit line, e.g., 'Gift of the artist’s backpack']\n\n"
-                            "Curatorial statement:\n"
-                            "[Curatorial statement of strictly 80–120 words analyzing the work. It MUST cite one invented theorist and their invented book title (e.g., as theorist Sylvère Vandermeer posits in 'The Ruptured Everyday' (2019)...). Use dense International Art English to frame the object as an urgent intervention into institutional space.]"
-                        )
-                    }, 
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=1.2,
-                max_output_tokens=700
-            )
-            result = response.output_text
-            label = parse_museum_label(result)
-        except Exception as e:
-            result = f"Error: {str(e)}"
-    return render_template("index.html", result=result, label=label)
+        # Generate both the museum label and gallery exhibition image simultaneously
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_text = executor.submit(generate_text_label, prompt)
+            future_image = executor.submit(generate_artwork_image, prompt)
+            result, label = future_text.result()
+            image_base64 = future_image.result()
+
+    return render_template("index.html", result=result, label=label, image_base64=image_base64)
 
 if __name__ == "__main__":
     app.run(debug=True)  # Run locally for testing

@@ -95,19 +95,23 @@ function parseMuseumLabel(text) {
  * Renders the parsed museum label elements into the placard container.
  */
 function renderMuseumPlacard(container, data) {
-    const mainFields = [
-        { key: "artist", title: "Artist" },
-        { key: "title", title: "Title" },
+    // Preserve existing image wrap if present at the top of the placard
+    const existingImg = container.querySelector(".placard-image-wrap");
+    const imageHtml = existingImg ? existingImg.outerHTML : "";
+
+    const topFields = [
+        { key: "artist", title: "Artist Name" },
+        { key: "title", title: "Title of the Artwork" },
         { key: "medium", title: "Medium" },
-        { key: "dimensions", title: "Dimensions" },
-        { key: "provenance", title: "Provenance" }
+        { key: "dimensions", title: "Dimensions" }
     ];
 
-    let html = `<div class="placard-card-inner">`;
+    let html = imageHtml;
+    html += `<div class="placard-card-inner">`;
 
-    // 1. First group of elements: Artist, Title, Medium, Dimensions, Provenance (each with title as header)
+    // 1. Top elements: Artist Name, Title of the Artwork, Medium, Dimensions
     html += `<div class="placard-primary-group">`;
-    for (const field of mainFields) {
+    for (const field of topFields) {
         if (data[field.key]) {
             const isTitle = field.key === "title";
             html += `
@@ -120,22 +124,35 @@ function renderMuseumPlacard(container, data) {
     }
     html += `</div>`;
 
-    // 2. Credit line in smaller font below the first group of elements
-    if (data.credit) {
-        html += `
-            <div class="placard-credit-line">
-                <span class="credit-header">Credit line:</span>
-                <span class="credit-value">${escapeHtml(data.credit)}</span>
-            </div>
-        `;
-    }
+    // 2. Line or separation
+    html += `<hr class="placard-divider">`;
 
-    // 3. Curatorial statement displayed in a second block of text below the first group
+    // 3. Curatorial statement
     if (data.curatorial) {
         html += `
             <div class="placard-curatorial-block">
                 <h4 class="curatorial-header">Curatorial Statement</h4>
                 <div class="curatorial-body">${formatCuratorialBody(data.curatorial)}</div>
+            </div>
+        `;
+    }
+
+    // 4. Provenance
+    if (data.provenance) {
+        html += `
+            <div class="placard-element placard-element-provenance">
+                <h4 class="element-header">Provenance</h4>
+                <div class="element-value">${escapeHtml(data.provenance)}</div>
+            </div>
+        `;
+    }
+
+    // 5. Credit line in smaller font
+    if (data.credit) {
+        html += `
+            <div class="placard-credit-line">
+                <span class="credit-header">Credit line:</span>
+                <span class="credit-value">${escapeHtml(data.credit)}</span>
             </div>
         `;
     }

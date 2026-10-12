@@ -110,6 +110,18 @@ form {
     max-width: 680px;
     margin-top: 36px;
     text-align: left;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .placard-heading {
@@ -146,10 +158,52 @@ form {
     border-radius: 8px 8px 0 0;
 }
 
+/* Image inside placard at the very top */
+.placard-image-wrap {
+    position: relative;
+    width: 100%;
+    margin-bottom: 24px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #0f1013;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.placard-artwork-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 520px;
+    object-fit: cover;
+}
+
+.artwork-tag {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(8px);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
 .placard-card-inner {
     display: flex;
     flex-direction: column;
     white-space: normal;
+}
+
+.placard-divider {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+    margin: 22px 0 18px 0;
 }
 
 /* 1. First Group: Main Museum Label Elements */
@@ -201,13 +255,38 @@ form {
     font-weight: 600;
 }
 
-/* 2. Credit line in smaller font below first group */
+/* Curatorial Statement */
+.placard-curatorial-block {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.curatorial-header {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: #111111;
+    margin: 0;
+}
+
+/* Provenance section */
+.placard-element-provenance {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Credit line in smaller font below */
 .placard-credit-line {
     font-size: 0.8rem;
     line-height: 1.4;
     color: #61656e;
-    margin-top: 18px;
-    padding-top: 14px;
+    margin-top: 14px;
+    padding-top: 10px;
     border-top: 1px dashed rgba(0, 0, 0, 0.16);
     display: flex;
     flex-wrap: wrap;
@@ -225,25 +304,6 @@ form {
 
 .credit-value {
     font-style: italic;
-}
-
-/* 3. Curatorial statement in second block below first group */
-.placard-curatorial-block {
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid rgba(0, 0, 0, 0.18);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.curatorial-header {
-    font-size: 0.82rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: #111111;
-    margin: 0;
 }
 
 .curatorial-body {

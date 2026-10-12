@@ -11,7 +11,6 @@
 <body>
     <div class="container text-center mt-5">
         <div class="gallery-header">
-            <h1 class="display-4">Generated Gallery</h1>
             <p class="subtitle">Enter the description of an everyday object to generate its canonical museum wall label.
             </p>
         </div>
@@ -26,23 +25,32 @@
             </div>
         </form>
 
-        {% if label %}
-        <div class="placard-section mt-4">
-            <h3 class="placard-heading">Museum Wall Label</h3>
+        {% if image_base64 or label or result %}
+        <div class="placard-section mt-5">
+            <h1 class="display-4">Generated Gallery</h1>
             <div class="museum-placard" id="museumPlacard">
+                {% if image_base64 %}
+                <div class="placard-image-wrap">
+                    <img src="data:image/png;base64,{{ image_base64 }}" alt="Exhibited Artwork in Gallery Setting"
+                        class="placard-artwork-img">
+                    <div class="artwork-tag">Exhibition View</div>
+                </div>
+                {% endif %}
+
+                {% if label %}
                 <div class="placard-card-inner">
-                    <!-- 1. First Group: Main Museum Label Elements -->
+                    <!-- 1. Top metadata elements: Artist Name, Title of the Artwork, Medium, Dimensions -->
                     <div class="placard-primary-group">
                         {% if label.artist %}
                         <div class="placard-element placard-element-artist">
-                            <h4 class="element-header">Artist</h4>
+                            <h4 class="element-header">Artist Name</h4>
                             <div class="element-value">{{ label.artist }}</div>
                         </div>
                         {% endif %}
 
                         {% if label.title %}
                         <div class="placard-element placard-element-title">
-                            <h4 class="element-header">Title</h4>
+                            <h4 class="element-header">Title of the Artwork</h4>
                             <div class="element-value element-value-title">{{ label.title }}</div>
                         </div>
                         {% endif %}
@@ -60,24 +68,12 @@
                             <div class="element-value">{{ label.dimensions }}</div>
                         </div>
                         {% endif %}
-
-                        {% if label.provenance %}
-                        <div class="placard-element placard-element-provenance">
-                            <h4 class="element-header">Provenance</h4>
-                            <div class="element-value">{{ label.provenance }}</div>
-                        </div>
-                        {% endif %}
                     </div>
 
-                    <!-- 2. Credit line in smaller font below first group -->
-                    {% if label.credit %}
-                    <div class="placard-credit-line">
-                        <span class="credit-header">Credit line:</span>
-                        <span class="credit-value">{{ label.credit }}</span>
-                    </div>
-                    {% endif %}
+                    <!-- Line or separation -->
+                    <hr class="placard-divider">
 
-                    <!-- 3. Curatorial statement in second block below first group -->
+                    <!-- Curatorial Statement -->
                     {% if label.curatorial %}
                     <div class="placard-curatorial-block">
                         <h4 class="curatorial-header">Curatorial Statement</h4>
@@ -86,13 +82,27 @@
                         </div>
                     </div>
                     {% endif %}
+
+                    <!-- Provenance -->
+                    {% if label.provenance %}
+                    <div class="placard-element placard-element-provenance">
+                        <h4 class="element-header">Provenance</h4>
+                        <div class="element-value">{{ label.provenance }}</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Credit line -->
+                    {% if label.credit %}
+                    <div class="placard-credit-line">
+                        <span class="credit-header">Credit line:</span>
+                        <span class="credit-value">{{ label.credit }}</span>
+                    </div>
+                    {% endif %}
                 </div>
+                {% elif result %}
+                <div class="raw-placard-result">{{ result }}</div>
+                {% endif %}
             </div>
-        </div>
-        {% elif result %}
-        <div class="placard-section mt-4">
-            <h3 class="placard-heading">Museum Wall Label</h3>
-            <div class="museum-placard alert alert-secondary" id="museumPlacard">{{ result }}</div>
         </div>
         {% endif %}
     </div>
