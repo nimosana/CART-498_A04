@@ -123,20 +123,63 @@ def generate_artwork_image(prompt):
         print(f"Image generation error: {e}")
         return None
 
+def load_last_saved():
+    text = None
+    image_b64 = None
+
+    if os.path.exists("latest_text.txt"):
+        try:
+            with open("latest_text.txt", "r", encoding="utf-8") as f:
+                text = f.read().strip()
+        except Exception as e:
+            print(f"Error reading latest_text.txt: {e}")
+
+    if os.path.exists("latest_artwork.png"):
+        try:
+            with open("latest_artwork.png", "rb") as f:
+                image_b64 = base64.b64encode(f.read()).decode("utf-8")
+        except Exception as e:
+            print(f"Error reading latest_artwork.png: {e}")
+
+    return text, image_b64
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
     label = None
     image_base64 = None
-    if request.method == "POST":
-        prompt = request.form["prompt"]
-        # Generate both the museum label and gallery exhibition image simultaneously
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            future_text = executor.submit(generate_text_label, prompt)
-            future_image = executor.submit(generate_artwork_image, prompt)
-            result, label = future_text.result()
-            image_base64 = future_image.result()
 
+    if request.method == "POST":
+        # Debug action: load last saved text and artwork without spending tokens
+        if request.form.get("debug") == "true":
+            result, image_base64 = load_last_saved()
+            if result:
+                label = parse_museum_label(result)
+            return render_template("index.html", result=result, label=label, image_base64=image_base64)
+
+        prompt = request.form.get("prompt", "").strip()
+        if prompt:
+            # Generate both the museum label and gallery exhibition image simultaneously
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                future_text = executor.submit(generate_text_label, prompt)
+                future_image = executor.submit(generate_artwork_image, prompt)
+                result, label = future_text.result()
+                image_base64 = future_image.result()
+
+            # Save the latest generated text to file
+            if result and not result.startswith("Error:"):
+                try:
+                    with open("latest_text.txt", "w", encoding="utf-8") as f:
+                        f.write(result)
+                except Exception as e:
+                    print(f"Error saving latest_text.txt: {e}")
+
+    return render_template("index.html", result=result, label=label, image_base64=image_base64)
+
+@app.route("/debug", methods=["GET"])
+def debug_view():
+    result, image_base64 = load_last_saved()
+    label = parse_museum_label(result) if result else None
     return render_template("index.html", result=result, label=label, image_base64=image_base64)
 
 if __name__ == "__main__":

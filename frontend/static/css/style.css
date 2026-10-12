@@ -75,12 +75,13 @@ form {
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
 }
 
-.d-grid {
+.form-actions {
     display: flex;
+    gap: 10px;
+    align-items: stretch;
 }
 
 .btn {
-    width: 100%;
     padding: 0.9rem 1.5rem;
     font-size: 1rem;
     font-weight: 600;
@@ -90,9 +91,11 @@ form {
     cursor: pointer;
     transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
     font-family: inherit;
+    white-space: nowrap;
 }
 
 .btn-primary {
+    flex: 1;
     background: #111111;
     color: #ffffff;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
@@ -102,6 +105,23 @@ form {
     background: #252525;
     transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.btn-debug {
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+    font-size: 0.88rem;
+    padding: 0.9rem 1.1rem;
+    letter-spacing: 0.03em;
+}
+
+.btn-debug:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
 }
 
 /* Museum Wall Placard Display */
@@ -118,6 +138,7 @@ form {
         opacity: 0;
         transform: translateY(8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -144,7 +165,6 @@ form {
     position: relative;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     transition: all 0.3s ease;
-    white-space: pre-wrap;
 }
 
 .museum-placard::before {
@@ -153,7 +173,7 @@ form {
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
+    height: 0px;
     background: #111111;
     border-radius: 8px 8px 0 0;
 }
@@ -162,12 +182,10 @@ form {
 .placard-image-wrap {
     position: relative;
     width: 100%;
-    margin-bottom: 24px;
+    margin-bottom: 12px;
     border-radius: 6px;
     overflow: hidden;
     background: #0f1013;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
-    border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .placard-artwork-img {
@@ -198,6 +216,7 @@ form {
     display: flex;
     flex-direction: column;
     white-space: normal;
+    padding-top: 1.4rem;
 }
 
 .placard-divider {

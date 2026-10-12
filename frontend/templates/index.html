@@ -15,14 +15,19 @@
             </p>
         </div>
 
-        <form method="POST" class="mx-auto col-md-8 col-lg-6">
+        <form method="POST" class="mx-auto col-md-8 col-lg-6" id="mainForm">
             <div class="mb-3">
                 <textarea name="prompt" rows="4" class="form-control" placeholder="Describe an object..."
-                    required></textarea>
+                    id="promptInput"></textarea>
             </div>
-            <div class="d-grid">
-                <input type="submit" value="Curate Museum Label" class="btn btn-primary">
+            <div class="form-actions">
+                <input type="submit" value="Generate Exhibition" class="btn btn-primary" id="generateBtn">
+                <button type="button" class="btn btn-debug" id="debugBtn" title="Reload last saved artwork without generating a new one">
+                    ⚡ Debug Preview
+                </button>
             </div>
+            <!-- Hidden field used when debug action is triggered -->
+            <input type="hidden" name="debug" id="debugField" value="false">
         </form>
 
         {% if image_base64 or label or result %}

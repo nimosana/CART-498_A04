@@ -7,6 +7,32 @@
  * 3. Curatorial statement in a second block of text below
  */
 
+// Debug button: submits form with debug=true, loading last saved text+image without API calls
+document.addEventListener("DOMContentLoaded", function () {
+    const debugBtn = document.getElementById("debugBtn");
+    const debugField = document.getElementById("debugField");
+    const form = document.getElementById("mainForm");
+    const generateBtn = document.getElementById("generateBtn");
+    const promptInput = document.getElementById("promptInput");
+
+    if (debugBtn && debugField && form) {
+        debugBtn.addEventListener("click", function () {
+            debugField.value = "true";
+            // Remove required attribute so form can submit without a prompt
+            if (promptInput) promptInput.removeAttribute("required");
+            form.submit();
+        });
+    }
+
+    // Restore required on generate button click to enforce prompt entry
+    if (generateBtn && promptInput) {
+        generateBtn.addEventListener("click", function () {
+            debugField.value = "false";
+            promptInput.setAttribute("required", "");
+        });
+    }
+});
+
 document.addEventListener("DOMContentLoaded", function () {
     const placard = document.getElementById("museumPlacard");
     if (!placard) return;
