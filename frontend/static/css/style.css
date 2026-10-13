@@ -18,7 +18,8 @@ body {
     position: fixed;
     inset: 0;
     z-index: 1000;
-    display: flex;          /* flex is set by JS when shown */
+    display: flex;
+    /* flex is set by JS when shown */
     align-items: center;
     justify-content: center;
 }
@@ -53,6 +54,7 @@ body {
     color: rgba(247, 247, 248, 0.75);
     margin: 0;
 }
+
 /* ─────────────────────────────────────────────────────────── */
 
 
@@ -106,7 +108,7 @@ form {
     border: 1px solid rgba(255, 255, 255, 0.25);
     background: rgba(255, 255, 255, 0.95);
     color: #111111;
-    resize: vertical;
+    resize: none;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
     font-family: inherit;
