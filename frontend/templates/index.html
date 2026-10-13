@@ -20,7 +20,7 @@
             <div class="loading-backdrop"></div>
             <div class="loading-content">
                 <img src="{{ url_for('static', filename='loading.gif') }}" alt="Generating..." class="loading-gif">
-                <p class="loading-label">Generating your exhibition…</p>
+                <p class="loading-label">Really..?<br>Generating your exhibition…</p>
             </div>
         </div>
 
@@ -31,7 +31,8 @@
             </div>
             <div class="form-actions">
                 <input type="submit" value="Generate Exhibition" class="btn btn-primary" id="generateBtn">
-                <button type="button" class="btn btn-debug" id="debugBtn" title="Reload last saved artwork without generating a new one">
+                <button type="button" class="btn btn-debug" id="debugBtn"
+                    title="Reload last saved artwork without generating a new one">
                     ⚡ Debug Preview
                 </button>
             </div>

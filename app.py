@@ -116,7 +116,7 @@ def generate_artwork_image(curatorial_statement):
             image_base64 = image_data[0]
             # Save the image to a file as shown in the example
             try:
-                with open("latest_artwork.png", "wb") as f:
+                with open("temp/latest_artwork.png", "wb") as f:
                     f.write(base64.b64decode(image_base64))
             except Exception:
                 pass
@@ -130,16 +130,16 @@ def load_last_saved():
     text = None
     image_b64 = None
 
-    if os.path.exists("latest_text.txt"):
+    if os.path.exists("temp/latest_text.txt"):
         try:
-            with open("latest_text.txt", "r", encoding="utf-8") as f:
+            with open("temp/latest_text.txt", "r", encoding="utf-8") as f:
                 text = f.read().strip()
         except Exception as e:
             print(f"Error reading latest_text.txt: {e}")
 
-    if os.path.exists("latest_artwork.png"):
+    if os.path.exists("temp/latest_artwork.png"):
         try:
-            with open("latest_artwork.png", "rb") as f:
+            with open("temp/latest_artwork.png", "rb") as f:
                 image_b64 = base64.b64encode(f.read()).decode("utf-8")
         except Exception as e:
             print(f"Error reading latest_artwork.png: {e}")
@@ -172,7 +172,7 @@ def index():
             # Save the latest generated text to file
             if result and not result.startswith("Error:"):
                 try:
-                    with open("latest_text.txt", "w", encoding="utf-8") as f:
+                    with open("temp/latest_text.txt", "w", encoding="utf-8") as f:
                         f.write(result)
                 except Exception as e:
                     print(f"Error saving latest_text.txt: {e}")
