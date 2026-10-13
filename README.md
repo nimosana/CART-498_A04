@@ -8,7 +8,7 @@
 4. Appreciate your generation!
 
 ### Image Generation derived from an imaginary museum label
-After you enter a prompt, the museum label is generated using OpenAI's GPT-4.1 model. From the generated museum label, the curatorial statement is extracted and used to generate an image using OpenAI's GPT-6-astra model:
+After you enter a prompt, the museum label is generated using OpenAI's GPT-4.1 model. From the generated text, the curatorial statement is extracted and appended into a block of text including predefined instructions. These instruct the model to generate an image of the object's curatorial statement in a gallery setting. This is the code snippet that creates the image prompt (the curatorial statement is appended in the `f"{curatorial_statement}"` placeholder):
 `image_prompt = (
             "Create a single, dramatic museum exhibition photograph of a contemporary conceptual artwork. "
             "The work is displayed in a pristine white-cube gallery: polished concrete floors, track-lit from above with a sharp spotlight, "
