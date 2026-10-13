@@ -15,6 +15,15 @@
             </p>
         </div>
 
+        <!-- Loading overlay: shown while generation is in progress -->
+        <div id="loadingOverlay" style="display:none;">
+            <div class="loading-backdrop"></div>
+            <div class="loading-content">
+                <img src="{{ url_for('static', filename='loading.gif') }}" alt="Generating..." class="loading-gif">
+                <p class="loading-label">Generating your exhibition…</p>
+            </div>
+        </div>
+
         <form method="POST" class="mx-auto col-md-8 col-lg-6" id="mainForm">
             <div class="mb-3">
                 <textarea name="prompt" rows="4" class="form-control" placeholder="Describe an object..."
@@ -112,6 +121,23 @@
         {% endif %}
     </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        (function () {
+            var form = document.getElementById('mainForm');
+            var generateBtn = document.getElementById('generateBtn');
+            var overlay = document.getElementById('loadingOverlay');
+
+            form.addEventListener('submit', function (e) {
+                // Only show loader when it's a real generation (not debug)
+                var debugField = document.getElementById('debugField');
+                if (!debugField || debugField.value !== 'true') {
+                    generateBtn.disabled = true;
+                    generateBtn.value = 'Generating…';
+                    overlay.style.display = 'flex';
+                }
+            });
+        })();
+    </script>
 </body>
 
 </html>

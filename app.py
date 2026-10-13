@@ -3,7 +3,6 @@ from openai import OpenAI
 import os
 import re
 import base64
-from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env
@@ -93,11 +92,15 @@ def generate_text_label(prompt):
     except Exception as e:
         return f"Error: {str(e)}", None
 
-def generate_artwork_image(prompt):
+def generate_artwork_image(curatorial_statement):
     try:
         image_prompt = (
-            f"Generate an image of {prompt} exhibited as a contemporary conceptual artwork in a prestigious museum gallery setting. "
-            f"The object is dramatically spotlit on a clean exhibition pedestal or mounted in a white-cube gallery space with polished floors."
+            "Create a single, dramatic museum exhibition photograph of a contemporary conceptual artwork. "
+            "The work is displayed in a pristine white-cube gallery: polished concrete floors, track-lit from above with a sharp spotlight, "
+            "clean gallery walls, and a sense of institutional gravitas. "
+            "The artwork itself should visually embody the following curatorial description:\\n\\n"
+            f"{curatorial_statement}\\n\\n"
+            "Render the scene as a high-quality editorial gallery photograph — no text overlays, no people, no frames on the walls."
         )
         response = client.responses.create(
             model="gpt-6-astra",
@@ -159,12 +162,12 @@ def index():
 
         prompt = request.form.get("prompt", "").strip()
         if prompt:
-            # Generate both the museum label and gallery exhibition image simultaneously
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                future_text = executor.submit(generate_text_label, prompt)
-                future_image = executor.submit(generate_artwork_image, prompt)
-                result, label = future_text.result()
-                image_base64 = future_image.result()
+            # Step 1: Generate the museum label text first
+            result, label = generate_text_label(prompt)
+
+            # Step 2: Use the curatorial statement as the image prompt (fall back to raw prompt)
+            curatorial_text = (label.get("curatorial") if label else None) or prompt
+            image_base64 = generate_artwork_image(curatorial_text)
 
             # Save the latest generated text to file
             if result and not result.startswith("Error:"):

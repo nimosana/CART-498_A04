@@ -13,6 +13,49 @@ body {
     color: #f7f7f8;
 }
 
+/* ── Loading overlay ──────────────────────────────────────── */
+#loadingOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;          /* flex is set by JS when shown */
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 11, 14, 0.82);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.loading-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.loading-gif {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+.loading-label {
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(247, 247, 248, 0.75);
+    margin: 0;
+}
+/* ─────────────────────────────────────────────────────────── */
+
+
 * {
     box-sizing: border-box;
 }
