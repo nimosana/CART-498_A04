@@ -1,4 +1,4 @@
-```javascript
+
 /**
  * Generated Gallery - Museum Wall Label Parser & Renderer
  *
@@ -13,64 +13,64 @@ function parseMuseumLabel(text) {
     let normalized = text.trim()
         .replace(/^```[a - zA - Z] *\n ?/, "")
         .replace(/\n?```$/, "")
-    .replace(/\r\n/g, "\n");
+        .replace(/\r\n/g, "\n");
 
-const headerRegex =
-    /(?:^|\n)\s*(?:[*#_>\s-]*)?(Artist|Title(?:\s+and\s+Year)?|Medium|Dimensions?|Provenance|Credit(?:\s*line)?|Curatorial\s*statement|Extended\s*label)\s*(?:[*#_>\s]*)?[:\-–—]\s*/gi;
+    const headerRegex =
+        /(?:^|\n)\s*(?:[*#_>\s-]*)?(Artist|Title(?:\s+and\s+Year)?|Medium|Dimensions?|Provenance|Credit(?:\s*line)?|Curatorial\s*statement|Extended\s*label)\s*(?:[*#_>\s]*)?[:\-–—]\s*/gi;
 
-const matches = [];
-let match;
+    const matches = [];
+    let match;
 
-while ((match = headerRegex.exec(normalized)) !== null) {
-    matches.push({
-        name: match[1],
-        index: match.index,
-        headerEnd: match.index + match[0].length
-    });
-}
-
-if (matches.length < 2) {
-    return null;
-}
-
-const sections = {};
-
-for (let i = 0; i < matches.length; i++) {
-    const current = matches[i];
-    const next = matches[i + 1];
-    const rawKey = current.name.toLowerCase().trim();
-
-    const valueEnd = next ? next.index : normalized.length;
-
-    let value = normalized
-        .substring(current.headerEnd, valueEnd)
-        .trim();
-
-    value = value
-        .replace(/^[*_~`]+|[*_~`]+$/g, "")
-        .trim();
-
-    if (rawKey.startsWith("artist")) {
-        sections.artist = value;
-    } else if (rawKey.startsWith("title")) {
-        sections.title = value;
-    } else if (rawKey.startsWith("medium")) {
-        sections.medium = value;
-    } else if (rawKey.startsWith("dimension")) {
-        sections.dimensions = value;
-    } else if (rawKey.startsWith("provenance")) {
-        sections.provenance = value;
-    } else if (rawKey.startsWith("credit")) {
-        sections.credit = value;
-    } else if (
-        rawKey.startsWith("curatorial") ||
-        rawKey.startsWith("extended")
-    ) {
-        sections.curatorial = value;
+    while ((match = headerRegex.exec(normalized)) !== null) {
+        matches.push({
+            name: match[1],
+            index: match.index,
+            headerEnd: match.index + match[0].length
+        });
     }
-}
 
-return sections;
+    if (matches.length < 2) {
+        return null;
+    }
+
+    const sections = {};
+
+    for (let i = 0; i < matches.length; i++) {
+        const current = matches[i];
+        const next = matches[i + 1];
+        const rawKey = current.name.toLowerCase().trim();
+
+        const valueEnd = next ? next.index : normalized.length;
+
+        let value = normalized
+            .substring(current.headerEnd, valueEnd)
+            .trim();
+
+        value = value
+            .replace(/^[*_~`]+|[*_~`]+$/g, "")
+            .trim();
+
+        if (rawKey.startsWith("artist")) {
+            sections.artist = value;
+        } else if (rawKey.startsWith("title")) {
+            sections.title = value;
+        } else if (rawKey.startsWith("medium")) {
+            sections.medium = value;
+        } else if (rawKey.startsWith("dimension")) {
+            sections.dimensions = value;
+        } else if (rawKey.startsWith("provenance")) {
+            sections.provenance = value;
+        } else if (rawKey.startsWith("credit")) {
+            sections.credit = value;
+        } else if (
+            rawKey.startsWith("curatorial") ||
+            rawKey.startsWith("extended")
+        ) {
+            sections.curatorial = value;
+        }
+    }
+
+    return sections;
 }
 
 /**
@@ -205,4 +205,3 @@ document.addEventListener("DOMContentLoaded", function () {
         renderMuseumPlacard(placard, parsed);
     }
 });
-```
