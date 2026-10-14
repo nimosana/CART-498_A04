@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -11,132 +11,319 @@
 <body>
     <div class="container text-center mt-5">
         <div class="gallery-header">
-            <p class="subtitle">Enter the description of an everyday object to generate its canonical museum wall label.
+            <p class="subtitle">
+                Enter the description of an everyday object to generate its canonical museum wall label.
             </p>
         </div>
 
-        <!-- Loading overlay: shown while generation is in progress -->
+        <!-- Loading overlay -->
         <div id="loadingOverlay" style="display:none;">
             <div class="loading-backdrop"></div>
             <div class="loading-content">
                 <img src="{{ url_for('static', filename='loading.gif') }}" alt="Generating..." class="loading-gif">
-                <p class="loading-label">Really..?<br>Generating your exhibition…</p>
+                <p class="loading-label" id="loadingLabel">
+                    Really..?<br>Generating your exhibition…
+                </p>
             </div>
         </div>
 
-        <form method="POST" class="mx-auto col-md-8 col-lg-6" id="mainForm">
+        <form method="POST" action="{{ url_for('index') }}" class="mx-auto col-md-8 col-lg-6" id="mainForm">
+
             <div class="mb-3">
                 <textarea name="prompt" rows="4" class="form-control" placeholder="Describe an object..."
-                    id="promptInput"></textarea>
+                    id="promptInput" required></textarea>
             </div>
+
             <div class="form-actions">
                 <input type="submit" value="Generate Exhibition" class="btn btn-primary" id="generateBtn">
+
                 <button type="button" class="btn btn-debug" id="debugBtn"
                     title="Reload last saved artwork without generating a new one">
                     ⚡ Debug Preview
                 </button>
             </div>
-            <!-- Hidden field used when debug action is triggered -->
+
             <input type="hidden" name="debug" id="debugField" value="false">
         </form>
 
-        {% if image_base64 or label or result %}
-        <div class="placard-section mt-5">
+        <div id="generationError" role="alert" style="display:none;"></div>
+
+        <!-- Results container: populated by Jinja initially or JavaScript later -->
+        <div class="placard-section mt-5" id="placardSection" {% if not (image_base64 or label or result)
+            %}style="display:none;" {% endif %}>
+
             <h1 class="display-4">Generated Gallery</h1>
+
             <div class="museum-placard" id="museumPlacard">
-                {% if image_base64 %}
-                <div class="placard-image-wrap">
-                    <img src="data:image/png;base64,{{ image_base64 }}" alt="Exhibited Artwork in Gallery Setting"
-                        class="placard-artwork-img">
+
+                <div class="placard-image-wrap" id="imageWrap" {% if not image_base64 %}style="display:none;" {% endif
+                    %}>
+                    <img id="artworkImage" {% if image_base64 %} src="data:image/png;base64,{{ image_base64 }}" {% endif
+                        %} alt="Exhibited Artwork in Gallery Setting" class="placard-artwork-img">
                     <div class="artwork-tag">Exhibition View</div>
                 </div>
-                {% endif %}
 
-                {% if label %}
-                <div class="placard-card-inner">
-                    <!-- 1. Top metadata elements: Artist Name, Title of the Artwork, Medium, Dimensions -->
+                <div class="placard-card-inner" id="placardContent" {% if not label %}style="display:none;" {% endif %}>
+
                     <div class="placard-primary-group">
-                        {% if label.artist %}
-                        <div class="placard-element placard-element-artist">
+
+                        <div class="placard-element placard-element-artist" id="artistBlock" {% if not label or not
+                            label.artist %}style="display:none;" {% endif %}>
                             <h4 class="element-header">Artist Name</h4>
-                            <div class="element-value">{{ label.artist }}</div>
+                            <div class="element-value" id="artistValue">{{ label.artist if label else '' }}</div>
                         </div>
-                        {% endif %}
 
-                        {% if label.title %}
-                        <div class="placard-element placard-element-title">
+                        <div class="placard-element placard-element-title" id="titleBlock" {% if not label or not
+                            label.title %}style="display:none;" {% endif %}>
                             <h4 class="element-header">Title of the Artwork</h4>
-                            <div class="element-value element-value-title">{{ label.title }}</div>
+                            <div class="element-value element-value-title" id="titleValue">{{ label.title if label else
+                                '' }}</div>
                         </div>
-                        {% endif %}
 
-                        {% if label.medium %}
-                        <div class="placard-element placard-element-medium">
+                        <div class="placard-element placard-element-medium" id="mediumBlock" {% if not label or not
+                            label.medium %}style="display:none;" {% endif %}>
                             <h4 class="element-header">Medium</h4>
-                            <div class="element-value">{{ label.medium }}</div>
+                            <div class="element-value" id="mediumValue">{{ label.medium if label else '' }}</div>
                         </div>
-                        {% endif %}
 
-                        {% if label.dimensions %}
-                        <div class="placard-element placard-element-dimensions">
+                        <div class="placard-element placard-element-dimensions" id="dimensionsBlock" {% if not label or
+                            not label.dimensions %}style="display:none;" {% endif %}>
                             <h4 class="element-header">Dimensions</h4>
-                            <div class="element-value">{{ label.dimensions }}</div>
+                            <div class="element-value" id="dimensionsValue">{{ label.dimensions if label else '' }}
+                            </div>
                         </div>
-                        {% endif %}
+
                     </div>
 
-                    <!-- Line or separation -->
                     <hr class="placard-divider">
 
-                    <!-- Curatorial Statement -->
-                    {% if label.curatorial %}
-                    <div class="placard-curatorial-block">
+                    <div class="placard-curatorial-block" id="curatorialBlock" {% if not label or not label.curatorial
+                        %}style="display:none;" {% endif %}>
                         <h4 class="curatorial-header">Curatorial Statement</h4>
                         <div class="curatorial-body">
-                            <p>{{ label.curatorial }}</p>
+                            <p id="curatorialValue">{{ label.curatorial if label else '' }}</p>
                         </div>
                     </div>
-                    {% endif %}
 
-                    <!-- Provenance -->
-                    {% if label.provenance %}
-                    <div class="placard-element placard-element-provenance">
+                    <div class="placard-element placard-element-provenance" id="provenanceBlock" {% if not label or not
+                        label.provenance %}style="display:none;" {% endif %}>
                         <h4 class="element-header">Provenance</h4>
-                        <div class="element-value">{{ label.provenance }}</div>
+                        <div class="element-value" id="provenanceValue">{{ label.provenance if label else '' }}</div>
                     </div>
-                    {% endif %}
 
-                    <!-- Credit line -->
-                    {% if label.credit %}
-                    <div class="placard-credit-line">
+                    <div class="placard-credit-line" id="creditBlock" {% if not label or not label.credit
+                        %}style="display:none;" {% endif %}>
                         <span class="credit-header">Credit line:</span>
-                        <span class="credit-value">{{ label.credit }}</span>
+                        <span class="credit-value" id="creditValue">{{ label.credit if label else '' }}</span>
                     </div>
-                    {% endif %}
+
                 </div>
-                {% elif result %}
-                <div class="raw-placard-result">{{ result }}</div>
-                {% endif %}
+
+                <div class="raw-placard-result" id="rawResult" {% if not result or label %}style="display:none;" {%
+                    endif %}>{{ result if result and not label else '' }}</div>
+
+                <p id="imageError" style="display:none;">
+                    The museum label was generated, but the image could not be generated.
+                </p>
+
             </div>
         </div>
-        {% endif %}
     </div>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <script>
-        (function () {
-            var form = document.getElementById('mainForm');
-            var generateBtn = document.getElementById('generateBtn');
-            var overlay = document.getElementById('loadingOverlay');
 
-            form.addEventListener('submit', function (e) {
-                // Only show loader when it's a real generation (not debug)
-                var debugField = document.getElementById('debugField');
-                if (!debugField || debugField.value !== 'true') {
-                    generateBtn.disabled = true;
-                    generateBtn.value = 'Generating…';
-                    overlay.style.display = 'flex';
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <script>
+        (() => {
+            const form = document.getElementById('mainForm');
+            const generateBtn = document.getElementById('generateBtn');
+            const debugBtn = document.getElementById('debugBtn');
+            const debugField = document.getElementById('debugField');
+            const promptInput = document.getElementById('promptInput');
+
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingLabel = document.getElementById('loadingLabel');
+            const errorElement = document.getElementById('generationError');
+
+            const placardSection = document.getElementById('placardSection');
+            const imageWrap = document.getElementById('imageWrap');
+            const artworkImage = document.getElementById('artworkImage');
+            const placardContent = document.getElementById('placardContent');
+            const rawResult = document.getElementById('rawResult');
+            const imageError = document.getElementById('imageError');
+
+            let isGenerating = false;
+
+            const sleep = ms =>
+                new Promise(resolve => setTimeout(resolve, ms));
+
+            function showError(message) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+
+            function setBlock(blockId, valueId, value) {
+                const block = document.getElementById(blockId);
+                const element = document.getElementById(valueId);
+
+                element.textContent = value || '';
+                block.style.display = value ? '' : 'none';
+            }
+
+            function resetResults() {
+                placardSection.style.display = 'none';
+                imageWrap.style.display = 'none';
+                artworkImage.removeAttribute('src');
+                placardContent.style.display = 'none';
+                rawResult.style.display = 'none';
+                rawResult.textContent = '';
+                imageError.style.display = 'none';
+                errorElement.style.display = 'none';
+            }
+
+            function displayResults(data) {
+                const label = data.label;
+
+                placardSection.style.display = '';
+
+                if (data.image_base64) {
+                    artworkImage.src =
+                        'data:image/png;base64,' + data.image_base64;
+                    imageWrap.style.display = '';
+                } else {
+                    imageWrap.style.display = 'none';
+                    imageError.style.display = '';
+                }
+
+                if (label) {
+                    placardContent.style.display = '';
+
+                    setBlock('artistBlock', 'artistValue', label.artist);
+                    setBlock('titleBlock', 'titleValue', label.title);
+                    setBlock('mediumBlock', 'mediumValue', label.medium);
+                    setBlock('dimensionsBlock', 'dimensionsValue', label.dimensions);
+                    setBlock('curatorialBlock', 'curatorialValue', label.curatorial);
+                    setBlock('provenanceBlock', 'provenanceValue', label.provenance);
+                    setBlock('creditBlock', 'creditValue', label.credit);
+
+                    rawResult.style.display = 'none';
+                } else {
+                    placardContent.style.display = 'none';
+                    rawResult.textContent = data.result || '';
+                    rawResult.style.display = data.result ? '' : 'none';
+                }
+            }
+
+            async function pollTask(taskId) {
+                let delay = 1500;
+
+                while (true) {
+                    await sleep(delay);
+
+                    const response = await fetch(
+                        '/status/' + encodeURIComponent(taskId),
+                        { cache: 'no-store' }
+                    );
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Unable to check generation status.');
+                    }
+
+                    switch (data.status) {
+                        case 'queued':
+                            loadingLabel.innerHTML =
+                                'Really..?<br>Your exhibition is queued…';
+                            break;
+
+                        case 'generating_text':
+                            loadingLabel.innerHTML =
+                                'Really..?<br>Writing the museum label…';
+                            break;
+
+                        case 'generating_image':
+                            loadingLabel.innerHTML =
+                                'Really..?<br>Generating your exhibition image…';
+                            break;
+
+                        case 'completed':
+                            displayResults(data);
+                            loadingLabel.innerHTML =
+                                'Really..?<br>Generation complete!';
+                            return;
+
+                        case 'failed':
+                            throw new Error(data.error || 'Generation failed.');
+
+                        default:
+                            throw new Error('Unknown task status: ' + data.status);
+                    }
+
+                    // Gradually reduce polling frequency during long image generation.
+                    delay = Math.min(Math.round(delay * 1.2), 4000);
+                }
+            }
+
+            form.addEventListener('submit', async event => {
+                event.preventDefault();
+
+                if (isGenerating) return;
+
+                const prompt = promptInput.value.trim();
+
+                if (!prompt) {
+                    promptInput.focus();
+                    return;
+                }
+
+                isGenerating = true;
+                generateBtn.disabled = true;
+                debugBtn.disabled = true;
+                generateBtn.value = 'Generating…';
+                debugField.value = 'false';
+
+                resetResults();
+                overlay.style.display = 'flex';
+                loadingLabel.innerHTML =
+                    'Really..?<br>Starting your exhibition…';
+
+                try {
+                    const formData = new FormData();
+                    formData.append('prompt', prompt);
+
+                    const response = await fetch('/generate', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Could not start generation.');
+                    }
+
+                    await pollTask(data.task_id);
+
+                } catch (error) {
+                    showError(error.message);
+                } finally {
+                    isGenerating = false;
+                    generateBtn.disabled = false;
+                    debugBtn.disabled = false;
+                    generateBtn.value = 'Generate Exhibition';
+                    overlay.style.display = 'none';
                 }
             });
+
+            debugBtn.addEventListener('click', () => {
+                if (isGenerating) return;
+
+                // Debug remains a normal page request, not a generation task.
+                debugField.value = 'true';
+                form.removeEventListener('submit', () => { });
+                window.location.href = '/debug';
+            });
+
         })();
     </script>
 </body>

@@ -1,4 +1,8 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
+import uuid
+import time
 from openai import OpenAI
 import os
 import re
@@ -9,6 +13,91 @@ load_dotenv()  # Load environment variables from .env
 
 app = Flask(__name__, template_folder="frontend/templates", static_folder="frontend/static")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+
+# A small thread pool keeps generation outside the HTTP request.
+executor = ThreadPoolExecutor(max_workers=2)
+
+# In-memory task storage. Suitable for a single-process deployment.
+tasks = {}
+tasks_lock = Lock()
+
+
+def run_generation(task_id, prompt):
+    """Generate the text and image in a background thread."""
+
+    try:
+        with tasks_lock:
+            tasks[task_id]["status"] = "generating_text"
+
+        # Step 1: Generate the museum label.
+        result, label = generate_text_label(prompt)
+
+        if not result or result.startswith("Error:"):
+            with tasks_lock:
+                tasks[task_id].update({
+                    "status": "failed",
+                    "error": result or "Text generation failed."
+                })
+            return
+
+        # Save the generated text.
+        try:
+            with open("latest_text.txt", "w", encoding="utf-8") as f:
+                f.write(result)
+        except Exception as e:
+            print(f"Error saving latest_text.txt: {e}")
+
+        # Step 2: Generate the image using the curatorial statement.
+        curatorial_text = (
+            (label.get("curatorial") if label else None) or prompt
+        )
+
+        with tasks_lock:
+            tasks[task_id]["status"] = "generating_image"
+            tasks[task_id]["result"] = result
+            tasks[task_id]["label"] = label
+
+        image_base64 = generate_artwork_image(curatorial_text)
+
+        # Step 3: Publish the completed result.
+        with tasks_lock:
+            tasks[task_id].update({
+                "status": "completed",
+                "result": result,
+                "label": label,
+                "image_base64": image_base64
+            })
+
+    except Exception as e:
+        print(f"Background generation failed: {e}")
+
+        with tasks_lock:
+            tasks[task_id].update({
+                "status": "failed",
+                "error": "An unexpected error occurred during generation."
+            })
+
+
+def start_generation(prompt):
+    """Create a task and schedule it without blocking the HTTP request."""
+
+    task_id = str(uuid.uuid4())
+
+    with tasks_lock:
+        tasks[task_id] = {
+            "status": "queued",
+            "result": None,
+            "label": None,
+            "image_base64": None,
+            "error": None,
+            "created_at": time.time()
+        }
+
+    executor.submit(run_generation, task_id, prompt)
+
+    return task_id
+
 
 def parse_museum_label(text):
     if not text or not isinstance(text, str):
@@ -146,44 +235,66 @@ def load_last_saved():
 
     return text, image_b64
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
-    result = None
-    label = None
-    image_base64 = None
+    # The page loads immediately; generation happens separately.
+    return render_template(
+        "index.html",
+        result=None,
+        label=None,
+        image_base64=None
+    )
 
-    if request.method == "POST":
-        # Debug action: load last saved text and artwork without spending tokens
-        if request.form.get("debug") == "true":
-            result, image_base64 = load_last_saved()
-            if result:
-                label = parse_museum_label(result)
-            return render_template("index.html", result=result, label=label, image_base64=image_base64)
 
-        prompt = request.form.get("prompt", "").strip()
-        if prompt:
-            # Step 1: Generate the museum label text first
-            result, label = generate_text_label(prompt)
+@app.route("/generate", methods=["POST"])
+def generate():
+    prompt = request.form.get("prompt", "").strip()
 
-            # Step 2: Use the curatorial statement as the image prompt (fall back to raw prompt)
-            curatorial_text = (label.get("curatorial") if label else None) or prompt
-            image_base64 = generate_artwork_image(curatorial_text)
+    if not prompt:
+        return jsonify({"error": "Please enter a prompt."}), 400
 
-            # Save the latest generated text to file
-            if result and not result.startswith("Error:"):
-                try:
-                    with open("latest_text.txt", "w", encoding="utf-8") as f:
-                        f.write(result)
-                except Exception as e:
-                    print(f"Error saving latest_text.txt: {e}")
+    task_id = start_generation(prompt)
 
-    return render_template("index.html", result=result, label=label, image_base64=image_base64)
+    return jsonify({
+        "task_id": task_id,
+        "status": "queued"
+    }), 202
+
+
+@app.route("/status/<task_id>", methods=["GET"])
+def generation_status(task_id):
+    with tasks_lock:
+        task = tasks.get(task_id)
+
+        if task is None:
+            return jsonify({
+                "error": "Task not found. It may have expired or the server restarted."
+            }), 404
+
+        # Copy the task while holding the lock.
+        result = dict(task)
+
+    return jsonify({
+        "status": result["status"],
+        "result": result["result"],
+        "label": result["label"],
+        "image_base64": result["image_base64"],
+        "error": result["error"]
+    })
+
 
 @app.route("/debug", methods=["GET"])
 def debug_view():
     result, image_base64 = load_last_saved()
     label = parse_museum_label(result) if result else None
-    return render_template("index.html", result=result, label=label, image_base64=image_base64)
+
+    return render_template(
+        "index.html",
+        result=result,
+        label=label,
+        image_base64=image_base64
+    )
+
 
 if __name__ == "__main__":
-    app.run(debug=True)  # Run locally for testing
+    app.run(debug=True)
