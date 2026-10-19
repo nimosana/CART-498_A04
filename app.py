@@ -14,7 +14,6 @@ load_dotenv()  # Load environment variables from .env
 app = Flask(__name__, template_folder="frontend/templates", static_folder="frontend/static")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
 # A small thread pool keeps generation outside the HTTP request.
 executor = ThreadPoolExecutor(max_workers=2)
 
