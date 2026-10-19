@@ -9,6 +9,7 @@
 
 ### Image Generation derived from an imaginary museum label
 After you enter a prompt, the museum label is generated using OpenAI's GPT-4.1 model. From the generated text, the curatorial statement is extracted and appended into a block of text including predefined instructions. These instruct the model to generate an image of the object's curatorial statement in a gallery setting. This is the code snippet that creates the image prompt (the curatorial statement is appended in the `f"{curatorial_statement}"` placeholder):
+
 `image_prompt = (
             "Create a single, dramatic museum exhibition photograph of a contemporary conceptual artwork. "
             "The work is displayed in a pristine white-cube gallery: polished concrete floors, track-lit from above with a sharp spotlight, "
@@ -23,6 +24,7 @@ After you enter a prompt, the museum label is generated using OpenAI's GPT-4.1 m
 The language model is instructed to take the role of a high-level curator at an important museum, and its task of turning the prompted object into a gallery work. This establishes the main goal and the tone of the output. The main IAE features chosen were to use elaborate and complex vocabulary as well as conceptual theory terms, as well as to exaggerate the object's importance and elevate it into a work of art. This consequently makes the contents of the museum labels more ambiguous and difficult to interpret, and ultimately lets the LLM get away with writing whatever, no matter if it makes sens or not, while sounding confident and smart. 
 
 The following lines from the Developer prompt are responsible for IAE features:
+
 `"You are the senior chief curator at an ultra-prestigious, internationally renowned contemporary art museum. "
 "Your job is to transform the user's everyday object into an elevated, canonical work of contemporary art and compose its official museum wall label (cartel).\n\n"
 "Style & Vocabulary Guidelines:\n"
