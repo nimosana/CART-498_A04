@@ -1,14 +1,68 @@
 # CART-498_A04
 
-### Getting Started
+## Run locally
 
-1. Open the web app at: https://cart-498-a04.onrender.com/
-2. In the text area, describe any object you would like to see displayed in a gallery.
-3. Click generate to begin the generation of the object's museum label and gallery image.
-4. Appreciate your generation!
+The application entry point is `app.py`. It starts a Flask development server and serves the page from `frontend/templates/index.html`, with static files from `frontend/static/`.
 
-### Image Generation derived from an imaginary museum label
-After you enter a prompt, the museum label is generated using OpenAI's GPT-4.1 model. From the generated text, the curatorial statement is extracted and appended into a block of text including predefined instructions. These instruct the model to generate an image of the object's curatorial statement in a gallery setting. This is the code snippet that creates the image prompt (the curatorial statement is appended in the `f"{curatorial_statement}"` placeholder):
+### Requirements
+
+- Python 3
+- An OpenAI API key with access to the models and image-generation tool configured in `app.py`
+
+### Windows PowerShell
+
+Run these commands from the repository root:
+
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+python -m pip install flask openai python-dotenv
+```
+
+If PowerShell blocks activation scripts, allow activation for this terminal session:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+```
+
+Create a `.env` file in the repository root with your API key:
+
+```text
+OPENAI_API_KEY=your_api_key_here
+```
+
+Replace the example value with your key; do not commit the `.env` file. Start the app from the repository root:
+
+```powershell
+python app.py
+```
+
+Open <http://127.0.0.1:5000/> in your browser. The terminal running Flask must stay open while you use the app. To stop it, press `Ctrl+C`.
+
+### macOS or Linux
+
+From the repository root, create and activate a virtual environment, install the same dependencies, then set `OPENAI_API_KEY` in a root `.env` file as shown above:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+python -m pip install flask openai python-dotenv
+python app.py
+```
+
+Then open <http://127.0.0.1:5000/>.
+
+### Using the app
+
+Enter an everyday object in the text area and select **Generate Exhibition**. The app submits the request to Flask, generates a museum label, and uses its curatorial statement to request a gallery image. Generation requires an internet connection and a working API key. The last generated text and image are saved under `temp/`; visit <http://127.0.0.1:5000/debug> to preview the last saved result.
+
+The deployed version is also available at <https://cart-498-a04.onrender.com/>.
+
+## Project notes
+
+### Image generation from an imaginary museum label
+
+After you enter a prompt, the museum label is generated using OpenAI's GPT-4.1 model. The curatorial statement is extracted from the generated text and appended to predefined instructions for the image model. This is the code snippet that creates the image prompt (the curatorial statement is appended in the `f"{curatorial_statement}"` placeholder):
 
 `image_prompt = (
             "Create a single, dramatic museum exhibition photograph of a contemporary conceptual artwork. "
@@ -19,11 +73,11 @@ After you enter a prompt, the museum label is generated using OpenAI's GPT-4.1 m
             "Render the scene as a high-quality editorial gallery photograph — no text overlays, no people, no frames on the walls."
         )`
 
-### Which IAE features I chose and how they were translated into prompt rules:
+### IAE features and prompt rules
 
-The language model is instructed to take the role of a high-level curator at an important museum, and its task of turning the prompted object into a gallery work. This establishes the main goal and the tone of the output. The main IAE features chosen were to use elaborate and complex vocabulary as well as conceptual theory terms, as well as to exaggerate the object's importance and elevate it into a work of art. This consequently makes the contents of the museum labels more ambiguous and difficult to interpret, and ultimately lets the LLM get away with writing whatever, no matter if it makes sens or not, while sounding confident and smart. 
+The language model is instructed to take the role of a high-level museum curator and turn the prompted object into a gallery work. The main IAE features are elaborate vocabulary, conceptual theory terms, and an exaggerated sense of the object's importance. This makes the museum labels more ambiguous while presenting the object as a significant work of art.
 
-The following lines from the Developer prompt are responsible for IAE features:
+The following lines from the developer prompt establish these features:
 
 `"You are the senior chief curator at an ultra-prestigious, internationally renowned contemporary art museum. "
 "Your job is to transform the user's everyday object into an elevated, canonical work of contemporary art and compose its official museum wall label (cartel).\n\n"
@@ -31,6 +85,8 @@ The following lines from the Developer prompt are responsible for IAE features:
 "- Heavily use International Art English (IAE) vocabulary and conceptual theory terms (e.g., discursive, interrogate, praxis, liminality, reification, assemblage, spatiality, ontological, performative, apparatus, tension, juxtaposition, destabilize, hermeneutics, subversion, relationality).\n"
 "- Radically exaggerate and elevate the gallery importance and institutional reverence of the object, treating even the most mundane detail as a profound metaphysical event.\n\n"`
 
-The rest of the rules mainly instruct the model how to divide the output into the different sections of the museum label, along with some rules about the format and presentation of the output. 
-### Why is a language model so fluent in this dialect?:
-Multiple Large language models (LLMs) such as OpenAI's GPT-4.1, are notorious for being trained on the biggest datasets their developers can build or scrape from the internet. International Art English is widely used by artists, curators, critics, galleries, museums, and other institutions in the art world, many of whom publish exhibition texts, press releases, catalogues, and critical essays online. These texts become part of the data used to train language models and share similarities in terms of vocabulary and structure. This exposes LLMs to vast examples of IAE. Because they have such large datasets, the data collected from these sources provides sufficient data for the models to learn from and see the patterns and similarities that make up IAE. As a result, language models have become adept at reproducing these types of texts.
+The remaining rules tell the model how to divide the output into sections and how to format the label.
+
+### Why is a language model fluent in this dialect?
+
+International Art English is used by artists, curators, critics, galleries, museums, and other art institutions in exhibition texts, press releases, catalogues, and critical essays. Such published writing may appear in the data used to train large language models. Exposure to recurring vocabulary and structures helps models reproduce the style.
